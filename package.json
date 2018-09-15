@@ -55,7 +55,9 @@
     "react": "^15.4.2",
     "react-animations": "^1.0.0",
     "react-dom": "^15.4.2",
-    "react-magic": "^0.2.3"
+    "react-magic": "^0.2.3",
+    "truffle-hdwallet-provider": "0.0.3",
+    "web3": "^1.0.0-beta.36"
   },
   "scripts": {
     "start": "node scripts/start.js",

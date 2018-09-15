@@ -10,6 +10,10 @@ import './css/open-sans.css'
 import './css/pure-min.css'
 import './App.css'
 
+const abi = [ { "constant": false, "inputs": [ { "name": "s", "type": "string" }, { "name": "t", "type": "string" } ], "name": "setWord", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [ { "name": "random", "type": "uint256" } ], "name": "getRandomWord", "outputs": [ { "name": "", "type": "uint256" }, { "name": "", "type": "string" }, { "name": "", "type": "address" }, { "name": "", "type": "string" } ], "payable": false, "stateMutability": "view", "type": "function" } ];
+let mycontract;
+
+
 // animate style
 const styles = StyleSheet.create({
     in: {
@@ -56,6 +60,11 @@ class App extends Component {
 			this.setState({
 				web3: results.web3
 			})
+            //使用原生api构造合约实例
+            console.log('provider :', this.state.web3.currentProvider);
+            mycontract = new results.web3.eth.Contract(abi, contractAddress);
+            console.log('mycontract :', mycontract);
+
 			this.instantiateContract()
 		})
 		.catch(() => {
@@ -71,10 +80,10 @@ class App extends Component {
 			this.setState({
 				random: parseInt(random_num)
 			})
-			console.log("setInterval读取", this.state.random)
+			// console.log("setInterval读取", this.state.random)
 			simpleStorageInstance.getRandomWord(this.state.random)
 			.then(result => {
-                console.log("setInterval读取成功", result)
+                // console.log("setInterval读取成功", result)
                 if(result[1]!=this.setState.word){
                     this.setState({
                         animate: this.state.out
@@ -176,15 +185,28 @@ class App extends Component {
 		})
     }
     // 写入区块链
-	setWord(){
+	async setWord(){
         if(!this.state.input) return
         const that = this
         this.setState({
             loading: true
         })
 		let timestamp = new Date().getTime()
-		simpleStorageInstance.setWord(this.state.input, String(timestamp), {from: this.state.web3.eth.accounts[0]})
-		.then(result => {
+        let accounts = await this.state.web3.eth.getAccounts();
+        // let account0 = '0x22c57F0537414FD95b9f0f08f1E51d8b96F14029';
+        const currentAccount = accounts[0];
+        console.log('account 0 :', currentAccount);
+        console.log('simpleStorageInstance:', simpleStorageInstance);
+
+        try {
+            // let result = await simpleStorageInstance.setWord(this.state.input, String(timestamp), {from: currentAccount})
+            let result = await mycontract.methods.setWord(this.state.input, String(timestamp)).send({
+                from: currentAccount,
+                gas : 3000000,
+            });
+            console.log('write successfully!', result);
+            alert(`transactionHash : , ${result.transactionHash}`);
+
             this.setState({
                 loadingTip: that.state.successTip
             })
@@ -195,14 +217,15 @@ class App extends Component {
                     loadingTip: that.state.waitingTip
                 })
             }, 1500)
-			
-        })
-        .catch(e => {
+
+        } catch (e) {
+            console.log('set failed!', e);
             // 拒绝支付
             this.setState({
                 loading: false
             })
-        })
+        }
+
 	}
     // 时间戳转义
     formatTime(timestamp) {
