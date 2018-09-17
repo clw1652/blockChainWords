@@ -50,12 +50,16 @@
   },
   "dependencies": {
     "aphrodite": "^1.2.5",
+    "canvas2image": "^1.0.5",
+    "dom-to-image": "^2.6.0",
     "dotenv": "^2.0.0",
+    "html2canvas": "^0.5.0-beta4",
     "rc-queue-anim": "^1.4.1",
     "react": "^15.4.2",
     "react-animations": "^1.0.0",
     "react-dom": "^15.4.2",
     "react-magic": "^0.2.3",
+    "react-router-dom": "^4.3.1",
     "truffle-hdwallet-provider": "0.0.3",
     "web3": "^1.0.0-beta.36"
   },

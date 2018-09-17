@@ -4,6 +4,9 @@ import getWeb3 from './utils/getWeb3'
 // animate
 import {StyleSheet, css} from 'aphrodite';
 import {spaceInLeft, spaceOutRight} from 'react-magic';
+import html2canvas from 'html2canvas'
+import Canvas2Image from 'canvas2image'
+import domtoimage from 'dom-to-image';
 
 import './css/oswald.css'
 import './css/open-sans.css'
@@ -82,11 +85,11 @@ let mycontract;
 const styles = StyleSheet.create({
     in: {
         animationName: spaceInLeft,
-        animationDuration: '6s'
+        animationDuration: '13s'
     },
     out: {
         animationName: spaceOutRight,
-        animationDuration: '6s'
+        animationDuration: '13s'
     }
 });
 
@@ -94,7 +97,7 @@ const contractAddress = "0x95e22f0f683f42bfbba37746b300e41d3ff6d083" // 合约�
 var simpleStorageInstance // 合约实例
 
 
-class App extends Component {
+class Mobile extends Component {
 
     constructor(props) {
         super(props)
@@ -113,15 +116,19 @@ class App extends Component {
             loadingTip: "留言写入所需时间不等（10s~5min），请耐心等待~",
             waitingTip: "留言写入所需时间不等（10s~5min），请耐心等待~",
             successTip: "留言成功",
-            animate: css(styles.out),
+            animate: "",
             in: css(styles.in),
             out: css(styles.out),
-            dataList: '',
-            stamp: false,
+            textarea: '',
+            submitFlag: false,
+            myDate: '',
+            blockHash: '',
+            blockNumber: ''
         }
     }
 
     componentWillMount() {
+      this.getMyDate()
         getWeb3
             .then(results => {
                 this.setState({
@@ -154,39 +161,23 @@ class App extends Component {
 
             simpleStorageInstance.getRandomWord(this.state.random)
                 .then(result => {
-                    console.log('showResult', result)
+                    // console.log("setInterval读取成功", result)
                     if (result[1] != this.setState.word) {
                         this.setState({
                             animate: this.state.out
                         })
-                        setTimeout(() => { 
-                            // let dataList = this.state.dataList
-                            // dataList = dataList.push(result[1])
-                            // console.log(80, dataList)
-                            if (result[1].indexOf('&%^') > -1) {
-                                this.setState({
-                                    stamp: false
-                                })
-                                that.setState({
-                                    count: result[0].c[0],
-                                    word: result[1],
-                                    from: result[2],
-                                    timestamp: result[3],
-                                    animate: this.state.in,
-                                    // dataList: this.state.dataList + '||' + result[1]
-                                })
-                                that.test()
-                                setTimeout(() => {
-                                    this.setState({
-                                        stamp: true
-                                    })
-                                }, 15000)
-                            }
-                            
+                        setTimeout(() => {
+                            that.setState({
+                                count: result[0].c[0],
+                                word: result[1],
+                                from: result[2],
+                                timestamp: result[3],
+                                animate: this.state.in
+                            })
                         }, 2000)
                     }
                 })
-        }, 20000)
+        }, 2000)
     }
 
     instantiateContract() {
@@ -230,88 +221,67 @@ class App extends Component {
 
         })
     }
-    test () {
-        var audio = document.getElementById('show-audio');
-        audio.play();
-    }
 
     render() {
-        console.log(1234, this.state.word)
         return (
-            <div className="container">
-                <main>
-                    <div className="main-container">
-                        <div onClick={() => this.test()} className="title-logo">
-                            <img src={require("../public/loading/logo.png")} />
-                        </div>
-                        {/* <div className="showword">
-                            <div className={this.state.animate}>
-                                {
-                                    (simpleStorageInstance && !this.state.firstTimeLoad)
-                                        ? <span
-                                            className={this.state.animate}>{this.state.word || this.state.emptyTip}</span>
-                                        : <img src={require("../public/loading/loading-bubbles.svg")} width="64"
-                                               height="64"/>
-                                }
-                            </div>
-                            <p className={this.state.animate}>
-                                <span>{this.state.word ? "来源：" + this.state.from : ""}</span>
-                                <span>{this.state.word ? "时间：" + this.formatTime(this.state.timestamp) : ""}</span>
-                            </p>
-                        </div> */}
-                        {/* <div className="setword">
-                            <input type="text" value={this.state.input} onChange={e => this.inputWord(e)}/>
-                            <button onClick={() => this.setWord()}>写入</button>
-                        </div> */}
+            <div className="mobileContainer">
+                <div id="userNameWrap">
+                    <div className="mobileTitleLogo">
+                    <img src={require("../public/loading/logo.png")} />
                     </div>
-                </main>
+                    {
+                    (!this.state.submitFlag ? 
+                        <div>
+                        <div className="inputContent">
+                            <input placeholder="请输入您的姓名Name" className="inputWord" type="text" value={this.state.input} onChange={e => this.inputWord(e)}/>
+                            <textarea placeholder="请输入您的誓言...Your vow..." className="inputTextArea" value={this.state.textarea} onChange={e => this.inputTextarea(e)}></textarea>
+                        </div>
+                        <div onClick={() => this.setWord()} className="submitBtn">提交Submit</div>
+                        </div>
+                        : 
+                        <div>
+                        <div className="userInputWrap">
+                            <div className="userNameWrap">
+                            <div className="userNameText">{this.state.input}</div>
+                            <div className="txHash">Hash: {this.state.blockHash}</div>
+                            <div className="blockNum">BlockNumber: {this.state.blockNumber}</div>
+                            <div className="vowWrap">
+                                <div className="vowText">
+                                Vow: {this.state.textarea}
+                                </div>
+                                <div className="vowDate">{this.state.myDate}</div>
+                                <img className="stampPic" src={require("../public/loading/group.png")} />
+                            </div>
+                            </div>
+                        </div>
+                        
+                        </div>
+                    )
+                    }
+                </div>
+                {
+                    (!this.state.submitFlag ? null : 
+                        <div onClick={() => this.savePic()} className="submitBtn savePicBtn">点击下拉保存Save</div>
+                    )
+                }
+                
                 <div className={this.state.loading ? "loading show" : "loading"}>
                     <img src={require("../public/loading/loading-bubbles.svg")} width="128" height="128"/>
-                    {/* <p>Matemask 钱包确认支付后开始写入留言</p>
-                    <p>{this.state.loadingTip}</p> */}
                 </div>
-                {/* <div style={{color: '#fff'}}>
-                    <div className="userInputWrap userInputWrapH">
-                        <div className="userNameWrap userNameWrapH">
-                        <div className="userNameText userNameTextH">maris</div>
-                        <div className="txHash txHashH"></div>
-                        <div className="blockNum"></div>
-                        <div className="vowWrap vowWrapH">
-                            <div className="vowText vowTextH">
-                            I love three things in this world.
-                            Sun,Moon and You.Sun for morning,Moon for night,and You forever.Sun fro morning.
-                            Moon for night,and You forever.
-                            </div>
-                            <div className="vowDate vowDateH">19930503</div>
-                            <img className="stampPic stampPicH" src={require("../public/loading/group1.gif")} />
-                        </div>
-                        </div>
-                    </div>
-                </div> */}
-                <div className={this.state.animate} style={{color: '#fff',width: '100%', height: '100%', position: 'absolute'}}>
-                    <div className="userInputWrap userInputWrapH">
-                        <div className="userNameWrap userNameWrapH">
-                        <div className="userNameText userNameTextH">{this.state.word && (this.state.word.split('&%^')[0])}</div>
-                        <div className="txHash txHashH">{this.state.word && this.state.word.split('&%^')[3]}</div>
-                        <div className="blockNum">{this.state.word && this.state.word.split('&%^')[4]}</div>
-                        <div className="vowWrap vowWrapH">
-                            <div className="vowText vowTextH">
-                            {this.state.word && this.state.word.split('&%^')[1]}
-                            </div>
-                            <div className="vowDate vowDateH">{this.state.word && this.state.word.split('&%^')[2]}</div>
-                            {
-                                this.state.stamp ? <img className="stampPic stampPicH" src={require("../public/loading/group1.gif")} /> : null
-                            }
-                            
-                        </div>
-                        </div>
-                    </div>
-                </div>
-                <audio id="show-audio" autoplay="autoplay">
-                <source src={require('../public/loading/yx.mp3')} type="audio/mp3" />
-                </audio>
             </div>
-        );
+          
+        )
+    }
+    savePic() {
+        this.convert2canvas()
+        // this.setState({
+        //     input: '',
+        //     textarea: '',
+        //     myDate: '',
+        //     blockHash: '',
+        //     blockNumber: '',
+        //     submitFlag: false
+        // })
     }
 
     inputWord(e) {
@@ -319,10 +289,22 @@ class App extends Component {
             input: e.target.value
         })
     }
+    inputTextarea(e) {
+      if (e.target.value.length > 200) {
+        this.setState({
+          textarea: this.state.textarea
+        })
+      } else {
+        this.setState({
+          textarea: e.target.value
+        })
+      }
+        
+    }
 
     // 写入区块链
     async setWord() {
-        if (!this.state.input) return
+        if (!this.state.input ||!this.state.textarea) return
         const that = this
         this.setState({
             loading: true
@@ -333,23 +315,31 @@ class App extends Component {
         const currentAccount = accounts[0];
         console.log('account 0 :', currentAccount);
         console.log('simpleStorageInstance:', simpleStorageInstance);
-
+        this.setState({
+          myDate: this.getMyDate()
+        })
+        let message = `${this.state.input}&%^${this.state.textarea}&%^${this.state.myDate}`
+        console.log('message', message)
         try {
             // let result = await simpleStorageInstance.setWord(this.state.input, String(timestamp), {from: currentAccount})
-            let result = await mycontract.methods.setWord(this.state.input, String(timestamp)).send({
+            let result = await mycontract.methods.setWord(message, String(timestamp)).send({
                 from: currentAccount,
                 gas: 3000000,
+                // gasprice: 500
             });
             console.log('write successfully!', result);
-            alert(`transactionHash : , ${result.transactionHash}`);
+            // alert(`transactionHash : , ${result.transactionHash}`);
 
             this.setState({
-                loadingTip: that.state.successTip
+                loadingTip: that.state.successTip,
+                submitFlag: true,
+                blockHash: result.blockHash,
+                blockNumber: result.blockNumber
             })
             setTimeout(() => {
                 that.setState({
                     loading: false,
-                    input: '',
+                    // input: '',
                     loadingTip: that.state.waitingTip
                 })
             }, 1500)
@@ -362,6 +352,68 @@ class App extends Component {
             })
         }
 
+    }
+    convert2canvas() {
+        var node = document.getElementById('userNameWrap');
+
+        domtoimage.toPng(node)
+            .then(function (dataUrl) {
+                var img = new Image();
+                img.src = dataUrl;
+                document.body.appendChild(img);
+            })
+            .catch(function (error) {
+                console.error('oops, something went wrong!', error);
+            });
+        // html2canvas(document.body).then(function(canvas) {
+        //     document.body.appendChild(canvas);
+        // });
+        // var shareContent = document.body; 
+        // var width = shareContent.offsetWidth; 
+        // var height = shareContent.offsetHeight; 
+        // var canvas = document.createElement("canvas"); 
+        // var scale = 2; 
+    
+        // canvas.width = width * scale; 
+        // canvas.height = height * scale; 
+        // canvas.getContext("2d").scale(scale, scale); 
+    
+        // var opts = {
+        //     scale: scale, 
+        //     canvas: canvas, 
+        //     logging: true, 
+        //     width: width, 
+        //     height: height 
+        // };
+        // html2canvas(shareContent, opts).then(function (canvas) {
+        //     var context = canvas.getContext('2d');
+    
+        //     var img = Canvas2Image.convertToImage(canvas, canvas.width, canvas.height);
+    
+        //     document.body.appendChild(img);
+        //     console.log(333, img)
+        //     // $(img).css({
+        //     //     "width": canvas.width / 2 + "px",
+        //     //     "height": canvas.height / 2 + "px",
+        //     // })
+        // });
+    }
+
+    getMyDate() {
+      var date = new Date();
+      var seperator1 = ".";
+      var year = date.getFullYear();
+      var month = date.getMonth() + 1;
+      var strDate = date.getDate();
+      if (month >= 1 && month <= 9) {
+          month = "0" + month;
+      }
+      if (strDate >= 0 && strDate <= 9) {
+          strDate = "0" + strDate;
+      }
+      var currentdate = year + seperator1 + month + seperator1 + strDate;
+      console.log(currentdate)
+      return currentdate
     }
 
     // 时间戳转义
@@ -384,4 +436,4 @@ class App extends Component {
     }
 }
 
-export default App
+export default Mobile
