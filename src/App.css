@@ -318,3 +318,6 @@ footer a{
     top: 100px;
     -webkit-filter: blur(1px);
 }
+.loading-text{
+    color: #fff;
+}

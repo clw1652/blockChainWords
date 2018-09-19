@@ -267,6 +267,8 @@ class Mobile extends Component {
                 
                 <div className={this.state.loading ? "loading show" : "loading"}>
                     <img src={require("../public/loading/loading-bubbles.svg")} width="128" height="128"/>
+                    <div className="loading-text">留言写入区块链时间不等(10s~5min)，请耐心等待页面跳转结束</div>
+                    <div className="loading-text">Please don’t close page，wait…</div>
                 </div>
             </div>
           
