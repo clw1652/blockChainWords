@@ -235,8 +235,10 @@ class App extends Component {
         audio.play();
     }
     componentDidMount () {
-        var audio = document.getElementById('background-audio')
-        audio.play()
+        setTimeout(() => {
+            var audio = document.getElementById('background-audio')
+            audio.play()   
+        }, 1000);
     }
 
     render() {
