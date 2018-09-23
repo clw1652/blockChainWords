@@ -235,18 +235,23 @@ class App extends Component {
         audio.play();
     }
     componentDidMount () {
-        setTimeout(() => {
-            var audio = document.getElementById('background-audio')
-            audio.play()   
-        }, 1000);
+        // setTimeout(() => {
+        //     var audio = document.getElementById('background-audio')
+        //     audio.play()   
+        // }, 1000);
+        document.addEventListener('DOMContentLoaded', function () {
+		    function audioAutoPlay() {
+		        var audio = document.getElementById('background-audio');
+		            audio.play();
+		    }
+		    audioAutoPlay();
+		});
     }
 
     render() {
         return (
             <div className="container">
-                <audio loop="loop" id="background-audio" autoplay="autoplay">
-                    <source src={require('../public/loading/bg_audio.mp3')} type="audio/mp3" />
-                </audio>
+                <audio src={require('../public/loading/bg_audio.mp3')} type="audio/mp3" loop="loop" id="background-audio" autoPlay="autoplay"></audio>
                 <main>
                     <div className="main-container">
                         <div onClick={() => this.test()} className="title-logo">
@@ -315,7 +320,7 @@ class App extends Component {
                         </div>
                     </div>
                 </div>
-                <audio id="show-audio" autoplay="autoplay">
+                <audio id="show-audio" autoPlay="autoplay">
                     <source src={require('../public/loading/yx.mp3')} type="audio/mp3" />
                 </audio>
             </div>
